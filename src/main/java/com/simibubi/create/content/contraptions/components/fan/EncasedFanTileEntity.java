@@ -1,9 +1,5 @@
 package com.simibubi.create.content.contraptions.components.fan;
 
-import java.util.List;
-
-import javax.annotation.Nullable;
-
 import com.simibubi.create.content.contraptions.base.KineticTileEntity;
 import com.simibubi.create.content.logistics.block.chute.ChuteTileEntity;
 import com.simibubi.create.foundation.advancement.AllAdvancements;
@@ -19,6 +15,10 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+
+import javax.annotation.Nullable;
+
+import java.util.List;
 
 @MethodsReturnNonnullByDefault
 public class EncasedFanTileEntity extends KineticTileEntity implements IAirCurrentSource {
@@ -39,7 +39,7 @@ public class EncasedFanTileEntity extends KineticTileEntity implements IAirCurre
 		super.addBehaviours(behaviours);
 		registerAwardables(behaviours, AllAdvancements.ENCASED_FAN, AllAdvancements.FAN_PROCESSING);
 	}
-	
+
 	@Override
 	protected void read(CompoundTag compound, boolean clientPacket) {
 		super.read(compound, clientPacket);
@@ -71,7 +71,7 @@ public class EncasedFanTileEntity extends KineticTileEntity implements IAirCurre
 	@Override
 	public Direction getAirflowOriginSide() {
 		return this.getBlockState()
-			.getValue(EncasedFanBlock.FACING);
+				.getValue(EncasedFanBlock.FACING);
 	}
 
 	@Override
@@ -89,7 +89,7 @@ public class EncasedFanTileEntity extends KineticTileEntity implements IAirCurre
 		super.remove();
 		updateChute();
 	}
-	
+
 	@Override
 	public boolean isSourceRemoved() {
 		return remove;
@@ -105,12 +105,11 @@ public class EncasedFanTileEntity extends KineticTileEntity implements IAirCurre
 	public void updateChute() {
 		Direction direction = getBlockState().getValue(EncasedFanBlock.FACING);
 		if (!direction.getAxis()
-			.isVertical())
+				.isVertical())
 			return;
 		BlockEntity poweredChute = level.getBlockEntity(worldPosition.relative(direction));
-		if (!(poweredChute instanceof ChuteTileEntity))
+		if (!(poweredChute instanceof ChuteTileEntity chuteTE))
 			return;
-		ChuteTileEntity chuteTE = (ChuteTileEntity) poweredChute;
 		if (direction == Direction.DOWN)
 			chuteTE.updatePull();
 		else
@@ -144,7 +143,7 @@ public class EncasedFanTileEntity extends KineticTileEntity implements IAirCurre
 			return;
 
 		if (entitySearchCooldown-- <= 0) {
-			entitySearchCooldown = 5;
+			entitySearchCooldown = AllConfigs.SERVER.kinetics.fanEntityCheckRate.get();
 			airCurrent.findEntities();
 		}
 
