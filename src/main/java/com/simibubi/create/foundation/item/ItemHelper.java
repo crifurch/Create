@@ -160,7 +160,7 @@ public class ItemHelper {
 
 	public static ItemStack extract(IItemHandler inv, Predicate<ItemStack> test, ExtractionCountMode mode, int amount,
 									boolean simulate) {
-		ItemStack extracting = ItemStack.EMPTY;
+		ItemStack extracting;
 		boolean amountRequired = mode == ExtractionCountMode.EXACTLY;
 		boolean checkHasEnoughItems = amountRequired;
 		boolean hasEnoughItems = !checkHasEnoughItems;
