@@ -339,8 +339,8 @@ public class ChuteTileEntity extends SmartTileEntity implements IHaveGoggleInfor
 		Predicate<ItemStack> canAccept = this::canAcceptItem;
 		int count = getExtractionAmount();
 		ExtractionCountMode mode = getExtractionMode();
-		if (mode == ExtractionCountMode.UPTO || !ItemHelper.extract(inv, canAccept, mode, count, true)
-			.isEmpty()) {
+
+		if (mode == ExtractionCountMode.UPTO) {
 			ItemStack extracted = ItemHelper.extract(inv, canAccept, mode, count, false);
 			if (!extracted.isEmpty())
 				setItem(extracted, startLocation);

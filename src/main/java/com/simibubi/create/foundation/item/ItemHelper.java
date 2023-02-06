@@ -1,14 +1,5 @@
 package com.simibubi.create.foundation.item;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.Function;
-import java.util.function.Predicate;
-
-import javax.annotation.Nullable;
-
-import org.apache.commons.lang3.mutable.MutableInt;
-
 import com.simibubi.create.foundation.config.AllConfigs;
 import com.simibubi.create.foundation.utility.Pair;
 
@@ -16,11 +7,21 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.NonNullList;
 import net.minecraft.util.Mth;
 import net.minecraft.world.Containers;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.ItemHandlerHelper;
+
+import org.apache.commons.lang3.mutable.MutableInt;
+
+import javax.annotation.Nullable;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Function;
+import java.util.function.Predicate;
 
 public class ItemHelper {
 
@@ -95,17 +96,18 @@ public class ItemHelper {
 
 	public static List<Pair<Ingredient, MutableInt>> condenseIngredients(NonNullList<Ingredient> recipeIngredients) {
 		List<Pair<Ingredient, MutableInt>> actualIngredients = new ArrayList<>();
-		Ingredients: for (Ingredient igd : recipeIngredients) {
+		Ingredients:
+		for (Ingredient igd : recipeIngredients) {
 			for (Pair<Ingredient, MutableInt> pair : actualIngredients) {
 				ItemStack[] stacks1 = pair.getFirst()
-					.getItems();
+						.getItems();
 				ItemStack[] stacks2 = igd.getItems();
 				if (stacks1.length != stacks2.length)
 					continue;
 				for (int i = 0; i <= stacks1.length; i++) {
 					if (i == stacks1.length) {
 						pair.getSecond()
-							.increment();
+								.increment();
 						continue Ingredients;
 					}
 					if (!ItemStack.matches(stacks1[i], stacks2[i]))
@@ -149,7 +151,7 @@ public class ItemHelper {
 
 	public static ItemStack extract(IItemHandler inv, Predicate<ItemStack> test, boolean simulate) {
 		return extract(inv, test, ExtractionCountMode.UPTO, AllConfigs.SERVER.logistics.defaultExtractionLimit.get(),
-			simulate);
+				simulate);
 	}
 
 	public static ItemStack extract(IItemHandler inv, Predicate<ItemStack> test, int exactAmount, boolean simulate) {
@@ -157,7 +159,7 @@ public class ItemHelper {
 	}
 
 	public static ItemStack extract(IItemHandler inv, Predicate<ItemStack> test, ExtractionCountMode mode, int amount,
-		boolean simulate) {
+									boolean simulate) {
 		ItemStack extracting = ItemStack.EMPTY;
 		boolean amountRequired = mode == ExtractionCountMode.EXACTLY;
 		boolean checkHasEnoughItems = amountRequired;
@@ -165,19 +167,25 @@ public class ItemHelper {
 		boolean potentialOtherMatch = false;
 		int maxExtractionCount = amount;
 
-		Extraction: do {
+		Extraction:
+		do {
 			extracting = ItemStack.EMPTY;
 
+			Item ignoreItem = null;
 			for (int slot = 0; slot < inv.getSlots(); slot++) {
+				final ItemStack stackInSlot = inv.getStackInSlot(slot);
+				if (ignoreItem != null && stackInSlot.getItem() == ignoreItem)
+					continue;
 				int amountToExtractFromThisSlot =
-					Math.min(maxExtractionCount - extracting.getCount(), inv.getStackInSlot(slot)
-						.getMaxStackSize());
+						Math.min(maxExtractionCount - extracting.getCount(), stackInSlot
+								.getMaxStackSize());
 				ItemStack stack = inv.extractItem(slot, amountToExtractFromThisSlot, true);
-
 				if (stack.isEmpty())
 					continue;
-				if (!test.test(stack))
+				if (!test.test(stack)) {
+					ignoreItem = stack.getItem();
 					continue;
+				}
 				if (!extracting.isEmpty() && !canItemStackAmountsStack(stack, extracting)) {
 					potentialOtherMatch = true;
 					continue;
@@ -222,7 +230,7 @@ public class ItemHelper {
 	}
 
 	public static ItemStack extract(IItemHandler inv, Predicate<ItemStack> test,
-		Function<ItemStack, Integer> amountFunction, boolean simulate) {
+									Function<ItemStack, Integer> amountFunction, boolean simulate) {
 		ItemStack extracting = ItemStack.EMPTY;
 		int maxExtractionCount = AllConfigs.SERVER.logistics.defaultExtractionLimit.get();
 
