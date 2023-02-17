@@ -1,6 +1,7 @@
 package com.simibubi.create.foundation.tileEntity;
 
 import java.util.ConcurrentModificationException;
+import java.util.Optional;
 
 import com.simibubi.create.content.schematics.ItemRequirement;
 import com.simibubi.create.foundation.tileEntity.behaviour.BehaviourType;
@@ -70,6 +71,8 @@ public abstract class TileEntityBehaviour {
 	 * Block destroyed or removed. Requires block to call ITE::onRemove
 	 */
 	public void destroy() {}
+
+	public void clear() {}
 
 	public void setLazyTickRate(int slowTickRate) {
 		this.lazyTickRate = slowTickRate;

@@ -1,8 +1,5 @@
 package com.simibubi.create.foundation.tileEntity.behaviour.filtering;
 
-import java.util.function.Consumer;
-import java.util.function.Supplier;
-
 import com.simibubi.create.content.logistics.item.filter.FilterItem;
 import com.simibubi.create.content.schematics.ItemRequirement;
 import com.simibubi.create.foundation.networking.AllPackets;
@@ -22,6 +19,9 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.items.ItemHandlerHelper;
+
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 public class FilteringBehaviour extends TileEntityBehaviour {
 
@@ -60,7 +60,9 @@ public class FilteringBehaviour extends TileEntityBehaviour {
 	}
 
 	@Override
-	public boolean isSafeNBT() { return true; }
+	public boolean isSafeNBT() {
+		return true;
+	}
 
 	@Override
 	public void write(CompoundTag nbt, boolean clientPacket) {
@@ -152,7 +154,7 @@ public class FilteringBehaviour extends TileEntityBehaviour {
 		filter = stack.copy();
 		callback.accept(filter);
 		count = !confirm ? 0
-			: (filter.getItem() instanceof FilterItem) ? 0 : Math.min(stack.getCount(), stack.getMaxStackSize());
+				: (filter.getItem() instanceof FilterItem) ? 0 : Math.min(stack.getCount(), stack.getMaxStackSize());
 		forceClientState = true;
 
 		tileEntity.setChanged();
@@ -168,6 +170,10 @@ public class FilteringBehaviour extends TileEntityBehaviour {
 		}
 
 		super.destroy();
+	}
+
+	public void clear() {
+		setFilter(ItemStack.EMPTY);
 	}
 
 	@Override

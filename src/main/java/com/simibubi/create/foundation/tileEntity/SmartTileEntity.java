@@ -18,7 +18,9 @@ import com.simibubi.create.foundation.utility.IPartialSafeNBT;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.world.Container;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.common.MinecraftForge;
@@ -26,7 +28,7 @@ import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
 import net.minecraftforge.items.CapabilityItemHandler;
 
-public abstract class SmartTileEntity extends CachedRenderBBTileEntity implements IPartialSafeNBT, IInteractionChecker, ISpecialBlockEntityItemRequirement {
+public abstract class SmartTileEntity extends CachedRenderBBTileEntity implements IPartialSafeNBT, IInteractionChecker, ISpecialBlockEntityItemRequirement, Container {
 
 	private final Map<BehaviourType<?>, TileEntityBehaviour> behaviours = new HashMap<>();
 	private boolean initialized = false;
@@ -54,7 +56,8 @@ public abstract class SmartTileEntity extends CachedRenderBBTileEntity implement
 	 * Gets called just before reading tile data for behaviours. Register anything
 	 * here that depends on your custom te data.
 	 */
-	public void addBehavioursDeferred(List<TileEntityBehaviour> behaviours) {}
+	public void addBehavioursDeferred(List<TileEntityBehaviour> behaviours) {
+	}
 
 	public void initialize() {
 		if (firstNbtRead) {
@@ -80,7 +83,8 @@ public abstract class SmartTileEntity extends CachedRenderBBTileEntity implement
 		forEachBehaviour(TileEntityBehaviour::tick);
 	}
 
-	public void lazyTick() {}
+	public void lazyTick() {
+	}
 
 	/**
 	 * Hook only these in future subclasses of STE
@@ -143,7 +147,8 @@ public abstract class SmartTileEntity extends CachedRenderBBTileEntity implement
 	/**
 	 * Block destroyed or picked up by a contraption. Usually detaches kinetics
 	 */
-	public void remove() {}
+	public void remove() {
+	}
 
 	/**
 	 * Block destroyed or replaced. Requires Block to call ITE::onRemove
@@ -175,7 +180,7 @@ public abstract class SmartTileEntity extends CachedRenderBBTileEntity implement
 
 	protected void forEachBehaviour(Consumer<TileEntityBehaviour> action) {
 		behaviours.values()
-			.forEach(action);
+				.forEach(action);
 	}
 
 	protected void attachBehaviourLate(TileEntityBehaviour behaviour) {
@@ -185,8 +190,8 @@ public abstract class SmartTileEntity extends CachedRenderBBTileEntity implement
 
 	public ItemRequirement getRequiredItems(BlockState state) {
 		return behaviours.values()
-			.stream()
-			.reduce(ItemRequirement.NONE, (r, b) -> r.union(b.getRequiredItems()), (r, r1) -> r.union(r1));
+				.stream()
+				.reduce(ItemRequirement.NONE, (r, b) -> r.union(b.getRequiredItems()), (r, r1) -> r.union(r1));
 	}
 
 	protected void removeBehaviour(BehaviourType<?> type) {
@@ -208,7 +213,7 @@ public abstract class SmartTileEntity extends CachedRenderBBTileEntity implement
 	public boolean isVirtual() {
 		return virtualMode;
 	}
-	
+
 	public boolean isChunkUnloaded() {
 		return chunkUnloaded;
 	}
@@ -218,7 +223,7 @@ public abstract class SmartTileEntity extends CachedRenderBBTileEntity implement
 		if (level == null || level.getBlockEntity(worldPosition) != this)
 			return false;
 		return player.distanceToSqr(worldPosition.getX() + 0.5D, worldPosition.getY() + 0.5D,
-			worldPosition.getZ() + 0.5D) <= 64.0D;
+				worldPosition.getZ() + 0.5D) <= 64.0D;
 	}
 
 	public void sendToContainer(FriendlyByteBuf buffer) {
@@ -259,6 +264,54 @@ public abstract class SmartTileEntity extends CachedRenderBBTileEntity implement
 		AdvancementBehaviour behaviour = getBehaviour(AdvancementBehaviour.TYPE);
 		if (behaviour != null)
 			behaviour.awardPlayerIfNear(advancement, range);
+	}
+
+	///compat section
+
+	@Override
+	public ItemStack getItem(int pIndex) {
+		return ItemStack.EMPTY;
+	}
+
+	@Override
+	public boolean canPlaceItem(int pIndex, ItemStack pStack) {
+		return false;
+	}
+
+	@Override
+	public int getContainerSize() {
+		return 0;
+	}
+
+	@Override
+	public boolean isEmpty() {
+		return true;
+	}
+
+	@Override
+	public ItemStack removeItem(int pIndex, int pCount) {
+		return ItemStack.EMPTY;
+	}
+
+
+	@Override
+	public ItemStack removeItemNoUpdate(int pIndex) {
+		return ItemStack.EMPTY;
+	}
+
+	@Override
+	public void setItem(int pIndex, ItemStack pStack) {
+
+	}
+
+	@Override
+	public boolean stillValid(Player pPlayer) {
+		return true;
+	}
+
+	@Override
+	public void clearContent() {
+		forEachBehaviour(TileEntityBehaviour::clear);
 	}
 
 }

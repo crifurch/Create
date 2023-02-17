@@ -78,12 +78,12 @@ public class DepotBehaviour extends TileEntityBehaviour {
 	public void enableMerging() {
 		allowMerge = true;
 	}
-	
+
 	public DepotBehaviour withCallback(Consumer<ItemStack> changeListener) {
 		onHeldInserted = changeListener;
 		return this;
 	}
-	
+
 	public DepotBehaviour onlyAccepts(Predicate<ItemStack> filter) {
 		acceptedItems = filter;
 		return this;
@@ -209,6 +209,19 @@ public class DepotBehaviour extends TileEntityBehaviour {
 			Block.popResource(level, pos, transportedItemStack.stack);
 		if (!getHeldItemStack().isEmpty())
 			Block.popResource(level, pos, getHeldItemStack());
+	}
+
+	@Override
+	public void clear(){
+		final int slots = processingOutputBuffer.getSlots();
+		for (int i = 0; i < slots; i++)
+			processingOutputBuffer.extractItem(i, 64, false);
+		final int slots1 = itemHandler.getSlots();
+		for (int i = 0; i < slots1; i++)
+			itemHandler.extractItem(i, 64, false);
+		transportedHandler.clear();
+		incoming.clear();
+		heldItem = null;
 	}
 
 	@Override

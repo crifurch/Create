@@ -174,7 +174,7 @@ public class BeltTileEntity extends KineticTileEntity {
 		if (!level.isLoaded(controller))
 			return;
 		BlockEntity te = level.getBlockEntity(controller);
-		if (te == null || !(te instanceof BeltTileEntity))
+		if (!(te instanceof BeltTileEntity))
 			return;
 		BeltInventory inventory = ((BeltTileEntity) te).getInventory();
 		if (inventory == null)
@@ -201,7 +201,7 @@ public class BeltTileEntity extends KineticTileEntity {
 		if (isController())
 			getInventory().ejectAll();
 	}
-	
+
 	@Override
 	public void invalidate() {
 		super.invalidate();
