@@ -213,13 +213,8 @@ public class DepotBehaviour extends TileEntityBehaviour {
 
 	@Override
 	public void clear(){
-		final int slots = processingOutputBuffer.getSlots();
-		for (int i = 0; i < slots; i++)
-			processingOutputBuffer.extractItem(i, 64, false);
-		final int slots1 = itemHandler.getSlots();
-		for (int i = 0; i < slots1; i++)
-			itemHandler.extractItem(i, 64, false);
-		transportedHandler.clear();
+		for (int i = 0; i < processingOutputBuffer.getSlots(); i++)
+			processingOutputBuffer.setStackInSlot(i, ItemStack.EMPTY);
 		incoming.clear();
 		heldItem = null;
 	}

@@ -1,14 +1,5 @@
 package com.simibubi.create.content.contraptions.processing;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Optional;
-import java.util.Random;
-
-import javax.annotation.Nonnull;
-
 import com.google.common.collect.ImmutableList;
 import com.simibubi.create.AllParticleTypes;
 import com.simibubi.create.AllTags;
@@ -29,12 +20,7 @@ import com.simibubi.create.foundation.tileEntity.behaviour.filtering.FilteringBe
 import com.simibubi.create.foundation.tileEntity.behaviour.fluid.SmartFluidTankBehaviour;
 import com.simibubi.create.foundation.tileEntity.behaviour.fluid.SmartFluidTankBehaviour.TankSegment;
 import com.simibubi.create.foundation.tileEntity.behaviour.inventory.InvManipulationBehaviour;
-import com.simibubi.create.foundation.utility.AnimationTickHolder;
-import com.simibubi.create.foundation.utility.Couple;
-import com.simibubi.create.foundation.utility.IntAttached;
-import com.simibubi.create.foundation.utility.Iterate;
-import com.simibubi.create.foundation.utility.NBTHelper;
-import com.simibubi.create.foundation.utility.VecHelper;
+import com.simibubi.create.foundation.utility.*;
 import com.simibubi.create.foundation.utility.animation.LerpedFloat;
 import com.simibubi.create.foundation.utility.animation.LerpedFloat.Chaser;
 
@@ -65,6 +51,10 @@ import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.IItemHandlerModifiable;
 import net.minecraftforge.items.ItemHandlerHelper;
 import net.minecraftforge.items.wrapper.CombinedInvWrapper;
+
+import javax.annotation.Nonnull;
+
+import java.util.*;
 
 public class BasinTileEntity extends SmartTileEntity implements IHaveGoggleInformation {
 
@@ -100,14 +90,14 @@ public class BasinTileEntity extends SmartTileEntity implements IHaveGoggleInfor
 		inputInventory = new BasinInventory(9, this);
 		inputInventory.whenContentsChanged($ -> contentsChanged = true);
 		outputInventory = new BasinInventory(9, this).forbidInsertion()
-			.withMaxStackSize(64);
+				.withMaxStackSize(64);
 		areFluidsMoving = false;
 		itemCapability = LazyOptional.of(() -> new CombinedInvWrapper(inputInventory, outputInventory));
 		contentsChanged = true;
 		ingredientRotation = LerpedFloat.angular()
-			.startWithValue(0);
+				.startWithValue(0);
 		ingredientRotationSpeed = LerpedFloat.linear()
-			.startWithValue(0);
+				.startWithValue(0);
 
 		invs = Couple.create(inputInventory, outputInventory);
 		tanks = Couple.create(inputTank, outputTank);
@@ -124,15 +114,15 @@ public class BasinTileEntity extends SmartTileEntity implements IHaveGoggleInfor
 	public void addBehaviours(List<TileEntityBehaviour> behaviours) {
 		behaviours.add(new DirectBeltInputBehaviour(this));
 		filtering = new FilteringBehaviour(this, new BasinValueBox()).moveText(new Vec3(2, -8, 0))
-			.withCallback(newFilter -> contentsChanged = true)
-			.forRecipes();
+				.withCallback(newFilter -> contentsChanged = true)
+				.forRecipes();
 		behaviours.add(filtering);
 
 		inputTank = new SmartFluidTankBehaviour(SmartFluidTankBehaviour.INPUT, this, 2, 1000, true)
-			.whenFluidUpdates(() -> contentsChanged = true);
+				.whenFluidUpdates(() -> contentsChanged = true);
 		outputTank = new SmartFluidTankBehaviour(SmartFluidTankBehaviour.OUTPUT, this, 2, 1000, true)
-			.whenFluidUpdates(() -> contentsChanged = true)
-			.forbidInsertion();
+				.whenFluidUpdates(() -> contentsChanged = true)
+				.forbidInsertion();
 		behaviours.add(inputTank);
 		behaviours.add(outputTank);
 
@@ -157,16 +147,16 @@ public class BasinTileEntity extends SmartTileEntity implements IHaveGoggleInfor
 		disabledList.forEach(d -> disabledSpoutputs.add(Direction.valueOf(((StringTag) d).getAsString())));
 		spoutputBuffer = NBTHelper.readItemList(compound.getList("Overflow", Tag.TAG_COMPOUND));
 		spoutputFluidBuffer = NBTHelper.readCompoundList(compound.getList("FluidOverflow", Tag.TAG_COMPOUND),
-			FluidStack::loadFluidStackFromNBT);
+				FluidStack::loadFluidStackFromNBT);
 
 		if (!clientPacket)
 			return;
 
 		NBTHelper.iterateCompoundList(compound.getList("VisualizedItems", Tag.TAG_COMPOUND),
-			c -> visualizedOutputItems.add(IntAttached.with(OUTPUT_ANIMATION_TIME, ItemStack.of(c))));
+				c -> visualizedOutputItems.add(IntAttached.with(OUTPUT_ANIMATION_TIME, ItemStack.of(c))));
 		NBTHelper.iterateCompoundList(compound.getList("VisualizedFluids", Tag.TAG_COMPOUND),
-			c -> visualizedOutputFluids
-				.add(IntAttached.with(OUTPUT_ANIMATION_TIME, FluidStack.loadFluidStackFromNBT(c))));
+				c -> visualizedOutputFluids
+						.add(IntAttached.with(OUTPUT_ANIMATION_TIME, FluidStack.loadFluidStackFromNBT(c))));
 	}
 
 	@Override
@@ -182,19 +172,19 @@ public class BasinTileEntity extends SmartTileEntity implements IHaveGoggleInfor
 		compound.put("DisabledSpoutput", disabledList);
 		compound.put("Overflow", NBTHelper.writeItemList(spoutputBuffer));
 		compound.put("FluidOverflow",
-			NBTHelper.writeCompoundList(spoutputFluidBuffer, fs -> fs.writeToNBT(new CompoundTag())));
+				NBTHelper.writeCompoundList(spoutputFluidBuffer, fs -> fs.writeToNBT(new CompoundTag())));
 
 		if (!clientPacket)
 			return;
 
 		compound.put("VisualizedItems", NBTHelper.writeCompoundList(visualizedOutputItems, ia -> ia.getValue()
-			.serializeNBT()));
+				.serializeNBT()));
 		compound.put("VisualizedFluids", NBTHelper.writeCompoundList(visualizedOutputFluids, ia -> ia.getValue()
-			.writeToNBT(new CompoundTag())));
+				.writeToNBT(new CompoundTag())));
 		visualizedOutputItems.clear();
 		visualizedOutputFluids.clear();
 	}
-	
+
 	@Override
 	public void destroy() {
 		super.destroy();
@@ -202,7 +192,17 @@ public class BasinTileEntity extends SmartTileEntity implements IHaveGoggleInfor
 		ItemHelper.dropContents(level, worldPosition, outputInventory);
 		spoutputBuffer.forEach(is -> Block.popResource(level, worldPosition, is));
 	}
-	
+
+	@Override
+	public void clearContent() {
+		super.clearContent();
+		for (int i = 0; i < inputInventory.getSlots(); i++)
+			inputInventory.clearContent();
+		for (int i = 0; i < outputInventory.getSlots(); i++)
+			outputInventory.clearContent();
+		spoutputBuffer.clear();
+	}
+
 	@Override
 	public void remove() {
 		super.remove();
@@ -212,7 +212,7 @@ public class BasinTileEntity extends SmartTileEntity implements IHaveGoggleInfor
 	public void onEmptied() {
 		getOperator().ifPresent(te -> te.basinRemoved = true);
 	}
-	
+
 	@Override
 	public void invalidate() {
 		super.invalidate();
@@ -290,7 +290,7 @@ public class BasinTileEntity extends SmartTileEntity implements IHaveGoggleInfor
 		}
 
 		if (preferredSpoutput != null && BasinBlock.canOutputTo(level, worldPosition, preferredSpoutput)
-			&& preferredSpoutput != Direction.UP)
+				&& preferredSpoutput != Direction.UP)
 			newFacing = preferredSpoutput;
 
 		if (newFacing == currentFacing)
@@ -299,7 +299,7 @@ public class BasinTileEntity extends SmartTileEntity implements IHaveGoggleInfor
 		level.setBlockAndUpdate(worldPosition, blockState.setValue(BasinBlock.FACING, newFacing));
 
 		if (newFacing.getAxis()
-			.isVertical())
+				.isVertical())
 			return;
 
 		for (int slot = 0; slot < outputInventory.getSlots(); slot++) {
@@ -308,14 +308,14 @@ public class BasinTileEntity extends SmartTileEntity implements IHaveGoggleInfor
 				continue;
 			if (acceptOutputs(ImmutableList.of(extractItem), Collections.emptyList(), true))
 				acceptOutputs(ImmutableList.of(outputInventory.extractItem(slot, 64, false)), Collections.emptyList(),
-					false);
+						false);
 		}
 
 		IFluidHandler handler = outputTank.getCapability()
-			.orElse(null);
+				.orElse(null);
 		for (int slot = 0; slot < handler.getTanks(); slot++) {
 			FluidStack fs = handler.getFluidInTank(slot)
-				.copy();
+					.copy();
 			if (fs.isEmpty())
 				continue;
 			if (acceptOutputs(Collections.emptyList(), ImmutableList.of(fs), true)) {
@@ -348,10 +348,10 @@ public class BasinTileEntity extends SmartTileEntity implements IHaveGoggleInfor
 
 		for (Direction offset : Iterate.horizontalDirections) {
 			BlockPos toUpdate = worldPosition.above()
-				.relative(offset);
+					.relative(offset);
 			BlockState stateToUpdate = level.getBlockState(toUpdate);
 			if (stateToUpdate.getBlock() instanceof BasinBlock
-				&& stateToUpdate.getValue(BasinBlock.FACING) == offset.getOpposite()) {
+					&& stateToUpdate.getValue(BasinBlock.FACING) == offset.getOpposite()) {
 				BlockEntity te = level.getBlockEntity(toUpdate);
 				if (te instanceof BasinTileEntity)
 					((BasinTileEntity) te).contentsChanged = true;
@@ -365,7 +365,7 @@ public class BasinTileEntity extends SmartTileEntity implements IHaveGoggleInfor
 			return;
 		Direction direction = blockState.getValue(BasinBlock.FACING);
 		BlockEntity te = level.getBlockEntity(worldPosition.below()
-			.relative(direction));
+				.relative(direction));
 
 		FilteringBehaviour filter = null;
 		InvManipulationBehaviour inserter = null;
@@ -375,16 +375,16 @@ public class BasinTileEntity extends SmartTileEntity implements IHaveGoggleInfor
 		}
 
 		IItemHandler targetInv = te == null ? null
-			: te.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, direction.getOpposite())
+				: te.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, direction.getOpposite())
 				.orElse(inserter == null ? null : inserter.getInventory());
 
 		IFluidHandler targetTank = te == null ? null
-			: te.getCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY, direction.getOpposite())
+				: te.getCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY, direction.getOpposite())
 				.orElse(null);
 
 		boolean update = false;
 
-		for (Iterator<ItemStack> iterator = spoutputBuffer.iterator(); iterator.hasNext();) {
+		for (Iterator<ItemStack> iterator = spoutputBuffer.iterator(); iterator.hasNext(); ) {
 			ItemStack itemStack = iterator.next();
 
 			if (direction == Direction.DOWN) {
@@ -397,7 +397,7 @@ public class BasinTileEntity extends SmartTileEntity implements IHaveGoggleInfor
 			if (targetInv == null)
 				break;
 			if (!ItemHandlerHelper.insertItemStacked(targetInv, itemStack, true)
-				.isEmpty())
+					.isEmpty())
 				continue;
 			if (filter != null && !filter.test(itemStack))
 				continue;
@@ -408,7 +408,7 @@ public class BasinTileEntity extends SmartTileEntity implements IHaveGoggleInfor
 			visualizedOutputItems.add(IntAttached.withZero(itemStack));
 		}
 
-		for (Iterator<FluidStack> iterator = spoutputFluidBuffer.iterator(); iterator.hasNext();) {
+		for (Iterator<FluidStack> iterator = spoutputFluidBuffer.iterator(); iterator.hasNext(); ) {
 			FluidStack fluidStack = iterator.next();
 
 			if (direction == Direction.DOWN) {
@@ -423,8 +423,8 @@ public class BasinTileEntity extends SmartTileEntity implements IHaveGoggleInfor
 			for (boolean simulate : Iterate.trueAndFalse) {
 				FluidAction action = simulate ? FluidAction.SIMULATE : FluidAction.EXECUTE;
 				int fill = targetTank instanceof SmartFluidTankBehaviour.InternalFluidHandler
-					? ((SmartFluidTankBehaviour.InternalFluidHandler) targetTank).forceFill(fluidStack.copy(), action)
-					: targetTank.fill(fluidStack.copy(), action);
+						? ((SmartFluidTankBehaviour.InternalFluidHandler) targetTank).forceFill(fluidStack.copy(), action)
+						: targetTank.fill(fluidStack.copy(), action);
 				if (fill != fluidStack.getAmount())
 					break;
 				if (simulate)
@@ -451,7 +451,7 @@ public class BasinTileEntity extends SmartTileEntity implements IHaveGoggleInfor
 				continue;
 			for (TankSegment tankSegment : behaviour.getTanks()) {
 				if (tankSegment.getRenderedFluid()
-					.isEmpty())
+						.isEmpty())
 					continue;
 				float units = tankSegment.getTotalUnits(partialTicks);
 				if (units < 1)
@@ -515,15 +515,15 @@ public class BasinTileEntity extends SmartTileEntity implements IHaveGoggleInfor
 		if (direction != Direction.DOWN) {
 
 			BlockEntity te = level.getBlockEntity(worldPosition.below()
-				.relative(direction));
+					.relative(direction));
 
 			InvManipulationBehaviour inserter =
-				te == null ? null : TileEntityBehaviour.get(level, te.getBlockPos(), InvManipulationBehaviour.TYPE);
+					te == null ? null : TileEntityBehaviour.get(level, te.getBlockPos(), InvManipulationBehaviour.TYPE);
 			IItemHandler targetInv = te == null ? null
-				: te.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, direction.getOpposite())
+					: te.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, direction.getOpposite())
 					.orElse(inserter == null ? null : inserter.getInventory());
 			IFluidHandler targetTank = te == null ? null
-				: te.getCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY, direction.getOpposite())
+					: te.getCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY, direction.getOpposite())
 					.orElse(null);
 			boolean externalTankNotPresent = targetTank == null;
 
@@ -532,7 +532,7 @@ public class BasinTileEntity extends SmartTileEntity implements IHaveGoggleInfor
 			if (!outputFluids.isEmpty() && externalTankNotPresent) {
 				// Special case - fluid outputs but output only accepts items
 				targetTank = outputTank.getCapability()
-					.orElse(null);
+						.orElse(null);
 				if (targetTank == null)
 					return false;
 				if (!acceptFluidOutputsIntoBasin(outputFluids, simulate, targetTank))
@@ -543,7 +543,7 @@ public class BasinTileEntity extends SmartTileEntity implements IHaveGoggleInfor
 				return true;
 			for (ItemStack itemStack : outputItems) {
 				if (itemStack.hasContainerItem() && itemStack.getContainerItem()
-					.sameItem(itemStack))
+						.sameItem(itemStack))
 					continue;
 				spoutputBuffer.add(itemStack.copy());
 			}
@@ -555,7 +555,7 @@ public class BasinTileEntity extends SmartTileEntity implements IHaveGoggleInfor
 
 		IItemHandler targetInv = outputInventory;
 		IFluidHandler targetTank = outputTank.getCapability()
-			.orElse(null);
+				.orElse(null);
 
 		if (targetInv == null && !outputItems.isEmpty())
 			return false;
@@ -572,12 +572,12 @@ public class BasinTileEntity extends SmartTileEntity implements IHaveGoggleInfor
 	}
 
 	private boolean acceptFluidOutputsIntoBasin(List<FluidStack> outputFluids, boolean simulate,
-		IFluidHandler targetTank) {
+												IFluidHandler targetTank) {
 		for (FluidStack fluidStack : outputFluids) {
 			FluidAction action = simulate ? FluidAction.SIMULATE : FluidAction.EXECUTE;
 			int fill = targetTank instanceof SmartFluidTankBehaviour.InternalFluidHandler
-				? ((SmartFluidTankBehaviour.InternalFluidHandler) targetTank).forceFill(fluidStack.copy(), action)
-				: targetTank.fill(fluidStack.copy(), action);
+					? ((SmartFluidTankBehaviour.InternalFluidHandler) targetTank).forceFill(fluidStack.copy(), action)
+					: targetTank.fill(fluidStack.copy(), action);
 			if (fill != fluidStack.getAmount())
 				return false;
 		}
@@ -588,10 +588,10 @@ public class BasinTileEntity extends SmartTileEntity implements IHaveGoggleInfor
 		for (ItemStack itemStack : outputItems) {
 			// Catalyst items are never consumed
 			if (itemStack.hasContainerItem() && itemStack.getContainerItem()
-				.sameItem(itemStack))
+					.sameItem(itemStack))
 				continue;
 			if (!ItemHandlerHelper.insertItemStacked(targetInv, itemStack.copy(), simulate)
-				.isEmpty())
+					.isEmpty())
 				return false;
 		}
 		return true;
@@ -667,8 +667,8 @@ public class BasinTileEntity extends SmartTileEntity implements IHaveGoggleInfor
 				float x = worldPosition.getX() + rim + space * r.nextFloat();
 				float z = worldPosition.getZ() + rim + space * r.nextFloat();
 				level.addAlwaysVisibleParticle(
-					new FluidParticleData(AllParticleTypes.BASIN_FLUID.get(), tankSegment.getRenderedFluid()), x,
-					surface, z, 0, 0, 0);
+						new FluidParticleData(AllParticleTypes.BASIN_FLUID.get(), tankSegment.getRenderedFluid()), x,
+						surface, z, 0, 0, 0);
 			}
 		}
 	}
@@ -682,10 +682,10 @@ public class BasinTileEntity extends SmartTileEntity implements IHaveGoggleInfor
 			return;
 		Vec3 directionVec = Vec3.atLowerCornerOf(direction.getNormal());
 		Vec3 outVec = VecHelper.getCenterOf(worldPosition)
-			.add(directionVec.scale(.65)
-				.subtract(0, 1 / 4f, 0));
+				.add(directionVec.scale(.65)
+						.subtract(0, 1 / 4f, 0));
 		Vec3 outMotion = directionVec.scale(1 / 16f)
-			.add(0, -1 / 16f, 0);
+				.add(0, -1 / 16f, 0);
 
 		for (int i = 0; i < 2; i++) {
 			visualizedOutputFluids.forEach(ia -> {
@@ -713,8 +713,8 @@ public class BasinTileEntity extends SmartTileEntity implements IHaveGoggleInfor
 				float angle = interval * (1 + currentSegment) + intervalOffset;
 				Vec3 vec = centerOf.add(VecHelper.rotate(pointer, angle, Axis.Y));
 				level.addAlwaysVisibleParticle(
-					new FluidParticleData(AllParticleTypes.BASIN_FLUID.get(), tankSegment.getRenderedFluid()), vec.x(),
-					surface, vec.z(), 1, 0, 0);
+						new FluidParticleData(AllParticleTypes.BASIN_FLUID.get(), tankSegment.getRenderedFluid()), vec.x(),
+						surface, vec.z(), 1, 0, 0);
 				currentSegment++;
 			}
 		}
@@ -733,7 +733,7 @@ public class BasinTileEntity extends SmartTileEntity implements IHaveGoggleInfor
 	@Override
 	public boolean addToGoggleTooltip(List<Component> tooltip, boolean isPlayerSneaking) {
 		return containedFluidTooltip(tooltip, isPlayerSneaking,
-			getCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY));
+				getCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY));
 	}
 
 	class BasinValueBox extends ValueBoxTransform.Sided {
@@ -746,7 +746,7 @@ public class BasinTileEntity extends SmartTileEntity implements IHaveGoggleInfor
 		@Override
 		protected boolean isSideActive(BlockState state, Direction direction) {
 			return direction.getAxis()
-				.isHorizontal();
+					.isHorizontal();
 		}
 
 	}

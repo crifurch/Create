@@ -1,16 +1,5 @@
 package com.simibubi.create.content.contraptions.components.saw;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Random;
-import java.util.function.Predicate;
-import java.util.function.Supplier;
-import java.util.stream.Collectors;
-
-import javax.annotation.ParametersAreNonnullByDefault;
-
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.simibubi.create.AllRecipeTypes;
@@ -49,15 +38,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.item.crafting.StonecutterRecipe;
-import net.minecraft.world.level.block.BambooBlock;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.CactusBlock;
-import net.minecraft.world.level.block.ChorusPlantBlock;
-import net.minecraft.world.level.block.KelpBlock;
-import net.minecraft.world.level.block.KelpPlantBlock;
-import net.minecraft.world.level.block.SoundType;
-import net.minecraft.world.level.block.StemGrownBlock;
-import net.minecraft.world.level.block.SugarCaneBlock;
+import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
@@ -69,13 +50,20 @@ import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.IItemHandler;
 
+import javax.annotation.ParametersAreNonnullByDefault;
+
+import java.util.*;
+import java.util.function.Predicate;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
+
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 public class SawTileEntity extends BlockBreakingKineticTileEntity {
 
 	private static final Object cuttingRecipesKey = new Object();
 	public static final Supplier<RecipeType<?>> woodcuttingRecipeType =
-		Suppliers.memoize(() -> Registry.RECIPE_TYPE.get(new ResourceLocation("druidcraft", "woodcutting")));
+			Suppliers.memoize(() -> Registry.RECIPE_TYPE.get(new ResourceLocation("druidcraft", "woodcutting")));
 
 	public ProcessingInventory inventory;
 	private int recipeIndex;
@@ -197,7 +185,7 @@ public class SawTileEntity extends BlockBreakingKineticTileEntity {
 			if (stack.isEmpty())
 				continue;
 			ItemStack tryExportingToBeltFunnel = getBehaviour(DirectBeltInputBehaviour.TYPE)
-				.tryExportingToBeltFunnel(stack, itemMovementFacing.getOpposite(), false);
+					.tryExportingToBeltFunnel(stack, itemMovementFacing.getOpposite(), false);
 			if (tryExportingToBeltFunnel != null) {
 				if (tryExportingToBeltFunnel.getCount() != stack.getCount()) {
 					inventory.setStackInSlot(slot, tryExportingToBeltFunnel);
@@ -236,10 +224,10 @@ public class SawTileEntity extends BlockBreakingKineticTileEntity {
 
 		// Eject Items
 		Vec3 outPos = VecHelper.getCenterOf(worldPosition)
-			.add(itemMovement.scale(.5f)
-				.add(0, .5, 0));
+				.add(itemMovement.scale(.5f)
+						.add(0, .5, 0));
 		Vec3 outMotion = itemMovement.scale(.0625)
-			.add(0, .125, 0);
+				.add(0, .125, 0);
 		for (int slot = 0; slot < inventory.getSlots(); slot++) {
 			ItemStack stack = inventory.getStackInSlot(slot);
 			if (stack.isEmpty())
@@ -259,11 +247,19 @@ public class SawTileEntity extends BlockBreakingKineticTileEntity {
 		super.invalidate();
 		invProvider.invalidate();
 	}
-	
+
 	@Override
 	public void destroy() {
 		super.destroy();
 		ItemHelper.dropContents(level, worldPosition, inventory);
+	}
+
+	@Override
+	public void clearContent() {
+		super.clearContent();
+		for (int i = 0; i < inventory.getSlots(); i++) {
+			inventory.setStackInSlot(i, ItemStack.EMPTY);
+		}
 	}
 
 	@Override
@@ -280,13 +276,13 @@ public class SawTileEntity extends BlockBreakingKineticTileEntity {
 		ParticleOptions particleData = null;
 		if (stack.getItem() instanceof BlockItem)
 			particleData = new BlockParticleOption(ParticleTypes.BLOCK, ((BlockItem) stack.getItem()).getBlock()
-				.defaultBlockState());
+					.defaultBlockState());
 		else
 			particleData = new ItemParticleOption(ParticleTypes.ITEM, stack);
 
 		Random r = level.random;
 		Vec3 v = VecHelper.getCenterOf(this.worldPosition)
-			.add(0, 5 / 16f, 0);
+				.add(0, 5 / 16f, 0);
 		for (int i = 0; i < 10; i++) {
 			Vec3 m = VecHelper.offsetRandomly(new Vec3(0, 0.25f, 0), r, .125f);
 			level.addParticle(particleData, v.x, v.y, v.z, m.x, m.y, m.y);
@@ -301,7 +297,7 @@ public class SawTileEntity extends BlockBreakingKineticTileEntity {
 		float speed = 1;
 		if (stack.getItem() instanceof BlockItem)
 			particleData = new BlockParticleOption(ParticleTypes.BLOCK, ((BlockItem) stack.getItem()).getBlock()
-				.defaultBlockState());
+					.defaultBlockState());
 		else {
 			particleData = new ItemParticleOption(ParticleTypes.ITEM, stack);
 			speed = .125f;
@@ -315,7 +311,7 @@ public class SawTileEntity extends BlockBreakingKineticTileEntity {
 		if (inventory.appliedRecipe)
 			offset -= .5f;
 		level.addParticle(particleData, pos.x() + -vec.x * offset, pos.y() + .45f, pos.z() + -vec.z * offset,
-			-vec.x * speed, r.nextFloat() * speed, -vec.z * speed);
+				-vec.x * speed, r.nextFloat() * speed, -vec.z * speed);
 	}
 
 	public Vec3 getItemMovementVec() {
@@ -334,7 +330,7 @@ public class SawTileEntity extends BlockBreakingKineticTileEntity {
 		Recipe<?> recipe = recipes.get(recipeIndex);
 
 		int rolls = inventory.getStackInSlot(0)
-			.getCount();
+				.getCount();
 		inventory.clear();
 
 		List<ItemStack> list = new ArrayList<>();
@@ -344,15 +340,15 @@ public class SawTileEntity extends BlockBreakingKineticTileEntity {
 				results = ((CuttingRecipe) recipe).rollResults();
 			else if (recipe instanceof StonecutterRecipe || recipe.getType() == woodcuttingRecipeType.get())
 				results.add(recipe.getResultItem()
-					.copy());
+						.copy());
 
 			for (int i = 0; i < results.size(); i++) {
 				ItemStack stack = results.get(i);
 				ItemHelper.addToList(stack, list);
 			}
 		}
-		
-		for (int slot = 0; slot < list.size() && slot + 1 < inventory.getSlots(); slot++) 
+
+		for (int slot = 0; slot < list.size() && slot + 1 < inventory.getSlots(); slot++)
 			inventory.setStackInSlot(slot + 1, list.get(slot));
 
 		award(AllAdvancements.SAW_PROCESSING);
@@ -360,21 +356,21 @@ public class SawTileEntity extends BlockBreakingKineticTileEntity {
 
 	private List<? extends Recipe<?>> getRecipes() {
 		Optional<CuttingRecipe> assemblyRecipe = SequencedAssemblyRecipe.getRecipe(level, inventory.getStackInSlot(0),
-			AllRecipeTypes.CUTTING.getType(), CuttingRecipe.class);
+				AllRecipeTypes.CUTTING.getType(), CuttingRecipe.class);
 		if (assemblyRecipe.isPresent() && filtering.test(assemblyRecipe.get()
-			.getResultItem()))
+				.getResultItem()))
 			return ImmutableList.of(assemblyRecipe.get());
 
 		Predicate<Recipe<?>> types = RecipeConditions.isOfType(AllRecipeTypes.CUTTING.getType(),
-			AllConfigs.SERVER.recipes.allowStonecuttingOnSaw.get() ? RecipeType.STONECUTTING : null,
-			AllConfigs.SERVER.recipes.allowWoodcuttingOnSaw.get() ? woodcuttingRecipeType.get() : null);
+				AllConfigs.SERVER.recipes.allowStonecuttingOnSaw.get() ? RecipeType.STONECUTTING : null,
+				AllConfigs.SERVER.recipes.allowWoodcuttingOnSaw.get() ? woodcuttingRecipeType.get() : null);
 
 		List<Recipe<?>> startedSearch = RecipeFinder.get(cuttingRecipesKey, level, types);
 		return startedSearch.stream()
-			.filter(RecipeConditions.outputMatchesFilter(filtering))
-			.filter(RecipeConditions.firstIngredientMatches(inventory.getStackInSlot(0)))
-			.filter(r -> !AllRecipeTypes.shouldIgnoreInAutomation(r))
-			.collect(Collectors.toList());
+				.filter(RecipeConditions.outputMatchesFilter(filtering))
+				.filter(RecipeConditions.firstIngredientMatches(inventory.getStackInSlot(0)))
+				.filter(r -> !AllRecipeTypes.shouldIgnoreInAutomation(r))
+				.collect(Collectors.toList());
 	}
 
 	public void insertItem(ItemEntity entity) {
@@ -389,7 +385,7 @@ public class SawTileEntity extends BlockBreakingKineticTileEntity {
 
 		inventory.clear();
 		ItemStack remainder = inventory.insertItem(0, entity.getItem()
-			.copy(), false);
+				.copy(), false);
 		if (remainder.isEmpty())
 			entity.discard();
 		else
@@ -441,8 +437,8 @@ public class SawTileEntity extends BlockBreakingKineticTileEntity {
 	@Override
 	protected boolean shouldRun() {
 		return getBlockState().getValue(SawBlock.FACING)
-			.getAxis()
-			.isHorizontal();
+				.getAxis()
+				.isHorizontal();
 	}
 
 	@Override
@@ -453,16 +449,16 @@ public class SawTileEntity extends BlockBreakingKineticTileEntity {
 	@Override
 	public void onBlockBroken(BlockState stateToBreak) {
 		Optional<AbstractBlockBreakQueue> dynamicTree =
-			TreeCutter.findDynamicTree(stateToBreak.getBlock(), breakingPos);
+				TreeCutter.findDynamicTree(stateToBreak.getBlock(), breakingPos);
 		if (dynamicTree.isPresent()) {
 			dynamicTree.get()
-				.destroyBlocks(level, null, this::dropItemFromCutTree);
+					.destroyBlocks(level, null, this::dropItemFromCutTree);
 			return;
 		}
 
 		super.onBlockBroken(stateToBreak);
 		TreeCutter.findTree(level, breakingPos)
-			.destroyBlocks(level, null, this::dropItemFromCutTree);
+				.destroyBlocks(level, null, this::dropItemFromCutTree);
 	}
 
 	public void dropItemFromCutTree(BlockPos pos, ItemStack stack) {
@@ -470,7 +466,7 @@ public class SawTileEntity extends BlockBreakingKineticTileEntity {
 		Vec3 dropPos = VecHelper.getCenterOf(pos);
 		ItemEntity entity = new ItemEntity(level, dropPos.x, dropPos.y, dropPos.z, stack);
 		entity.setDeltaMovement(Vec3.atLowerCornerOf(breakingPos.subtract(this.worldPosition))
-			.scale(distance / 20f));
+				.scale(distance / 20f));
 		level.addFreshEntity(entity);
 	}
 

@@ -1,12 +1,5 @@
 package com.simibubi.create.content.logistics.block.chute;
 
-import java.util.LinkedList;
-import java.util.List;
-import java.util.function.Predicate;
-
-import javax.annotation.Nullable;
-import javax.annotation.ParametersAreNonnullByDefault;
-
 import com.simibubi.create.AllBlocks;
 import com.simibubi.create.Create;
 import com.simibubi.create.content.contraptions.components.fan.AirCurrent;
@@ -24,11 +17,7 @@ import com.simibubi.create.foundation.tileEntity.TileEntityBehaviour;
 import com.simibubi.create.foundation.tileEntity.behaviour.belt.DirectBeltInputBehaviour;
 import com.simibubi.create.foundation.tileEntity.behaviour.belt.TransportedItemStackHandlerBehaviour;
 import com.simibubi.create.foundation.tileEntity.behaviour.belt.TransportedItemStackHandlerBehaviour.TransportedResult;
-import com.simibubi.create.foundation.utility.BlockHelper;
-import com.simibubi.create.foundation.utility.Components;
-import com.simibubi.create.foundation.utility.Iterate;
-import com.simibubi.create.foundation.utility.Lang;
-import com.simibubi.create.foundation.utility.VecHelper;
+import com.simibubi.create.foundation.utility.*;
 import com.simibubi.create.foundation.utility.animation.LerpedFloat;
 
 import net.minecraft.ChatFormatting;
@@ -54,6 +43,13 @@ import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.ItemHandlerHelper;
+
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
+
+import java.util.LinkedList;
+import java.util.List;
+import java.util.function.Predicate;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
@@ -203,7 +199,7 @@ public class ChuteTileEntity extends SmartTileEntity implements IHaveGoggleInfor
 
 			for (int i = 1; i <= flowLimit + 1; i++) {
 				TransportedItemStackHandlerBehaviour behaviour =
-					TileEntityBehaviour.get(level, worldPosition.below(i), TransportedItemStackHandlerBehaviour.TYPE);
+						TileEntityBehaviour.get(level, worldPosition.below(i), TransportedItemStackHandlerBehaviour.TYPE);
 				if (behaviour == null)
 					continue;
 				beltBelow = behaviour;
@@ -231,7 +227,7 @@ public class ChuteTileEntity extends SmartTileEntity implements IHaveGoggleInfor
 			if (!canAcceptItem(entityItem))
 				continue;
 			setItem(entityItem.copy(), (float) (itemEntity.getBoundingBox()
-				.getCenter().y - worldPosition.getY()));
+					.getCenter().y - worldPosition.getY()));
 			itemEntity.discard();
 			break;
 		}
@@ -289,7 +285,7 @@ public class ChuteTileEntity extends SmartTileEntity implements IHaveGoggleInfor
 			return;
 
 		if (up && AbstractChuteBlock.isOpenChute(blockState)
-			&& BlockHelper.noCollisionInSpace(level, worldPosition.above()))
+				&& BlockHelper.noCollisionInSpace(level, worldPosition.above()))
 			spawnAirFlow(1, 2, absMotion, .5f);
 
 		if (AbstractChuteBlock.getChuteFacing(blockState) != Direction.DOWN)
@@ -316,7 +312,7 @@ public class ChuteTileEntity extends SmartTileEntity implements IHaveGoggleInfor
 		float zOff = Create.RANDOM.nextFloat() * .5f + .25f;
 		Vec3 v = origin.add(xOff, verticalStart, zOff);
 		Vec3 d = origin.add(xOff, verticalEnd, zOff)
-			.subtract(v);
+				.subtract(v);
 		if (Create.RANDOM.nextFloat() < 2 * motion)
 			level.addAlwaysVisibleParticle(airParticleData, v.x, v.y, v.z, d.x, d.y, d.z);
 	}
@@ -340,7 +336,7 @@ public class ChuteTileEntity extends SmartTileEntity implements IHaveGoggleInfor
 		int count = getExtractionAmount();
 		ExtractionCountMode mode = getExtractionMode();
 
-		if (mode == ExtractionCountMode.UPTO  || !ItemHelper.extract(inv, canAccept, mode, count, true)
+		if (mode == ExtractionCountMode.UPTO || !ItemHelper.extract(inv, canAccept, mode, count, true)
 				.isEmpty()) {
 			ItemStack extracted = ItemHelper.extract(inv, canAccept, mode, count, false);
 			if (!extracted.isEmpty())
@@ -381,7 +377,7 @@ public class ChuteTileEntity extends SmartTileEntity implements IHaveGoggleInfor
 
 		// Diagonal chutes cannot drop items
 		if (direction.getAxis()
-			.isHorizontal())
+				.isHorizontal())
 			return false;
 
 		if (FunnelBlock.getFunnelFacing(level.getBlockState(worldPosition.below())) == Direction.DOWN)
@@ -391,7 +387,7 @@ public class ChuteTileEntity extends SmartTileEntity implements IHaveGoggleInfor
 
 		if (!simulate) {
 			Vec3 dropVec = VecHelper.getCenterOf(worldPosition)
-				.add(0, -12 / 16f, 0);
+					.add(0, -12 / 16f, 0);
 			ItemEntity dropped = new ItemEntity(level, dropVec.x, dropVec.y, dropVec.z, item.copy());
 			dropped.setDefaultPickUpDelay();
 			dropped.setDeltaMovement(0, -.25f, 0);
@@ -452,7 +448,7 @@ public class ChuteTileEntity extends SmartTileEntity implements IHaveGoggleInfor
 
 		if (!simulate) {
 			Vec3 dropVec = VecHelper.getCenterOf(worldPosition)
-				.add(0, 8 / 16f, 0);
+					.add(0, 8 / 16f, 0);
 			ItemEntity dropped = new ItemEntity(level, dropVec.x, dropVec.y, dropVec.z, item.copy());
 			dropped.setDefaultPickUpDelay();
 			dropped.setDeltaMovement(0, getItemMotion() * 2, 0);
@@ -573,6 +569,15 @@ public class ChuteTileEntity extends SmartTileEntity implements IHaveGoggleInfor
 		inputChutes.forEach(c -> c.updatePush(inputChutes.size()));
 	}
 
+	@Override
+	public void clearContent() {
+		super.clearContent();
+		item = ItemStack.EMPTY;
+		ChuteTileEntity targetChute = getTargetChute(getBlockState());
+		if (targetChute != null)
+			targetChute.propagatePush();
+	}
+
 	public void onAdded() {
 		refreshBlockState();
 		updatePull();
@@ -613,7 +618,7 @@ public class ChuteTileEntity extends SmartTileEntity implements IHaveGoggleInfor
 	protected float calculatePull() {
 		BlockState blockStateAbove = level.getBlockState(worldPosition.above());
 		if (AllBlocks.ENCASED_FAN.has(blockStateAbove)
-			&& blockStateAbove.getValue(EncasedFanBlock.FACING) == Direction.DOWN) {
+				&& blockStateAbove.getValue(EncasedFanBlock.FACING) == Direction.DOWN) {
 			BlockEntity te = level.getBlockEntity(worldPosition.above());
 			if (te instanceof EncasedFanTileEntity && !te.isRemoved()) {
 				EncasedFanTileEntity fan = (EncasedFanTileEntity) te;
@@ -636,7 +641,7 @@ public class ChuteTileEntity extends SmartTileEntity implements IHaveGoggleInfor
 			return 0;
 		BlockState blockStateBelow = level.getBlockState(worldPosition.below());
 		if (AllBlocks.ENCASED_FAN.has(blockStateBelow)
-			&& blockStateBelow.getValue(EncasedFanBlock.FACING) == Direction.UP) {
+				&& blockStateBelow.getValue(EncasedFanBlock.FACING) == Direction.UP) {
 			BlockEntity te = level.getBlockEntity(worldPosition.below());
 			if (te instanceof EncasedFanTileEntity && !te.isRemoved()) {
 				EncasedFanTileEntity fan = (EncasedFanTileEntity) te;
@@ -659,7 +664,7 @@ public class ChuteTileEntity extends SmartTileEntity implements IHaveGoggleInfor
 			return null;
 		BlockPos chutePos = worldPosition.below();
 		if (targetDirection.getAxis()
-			.isHorizontal())
+				.isHorizontal())
 			chutePos = chutePos.relative(targetDirection.getOpposite());
 		BlockState chuteState = level.getBlockState(chutePos);
 		if (!AbstractChuteBlock.isChute(chuteState))
@@ -688,7 +693,7 @@ public class ChuteTileEntity extends SmartTileEntity implements IHaveGoggleInfor
 		direction = direction.getOpposite();
 		BlockPos chutePos = worldPosition.above();
 		if (direction.getAxis()
-			.isHorizontal())
+				.isHorizontal())
 			chutePos = chutePos.relative(direction);
 		BlockState chuteState = level.getBlockState(chutePos);
 		Direction chuteFacing = AbstractChuteBlock.getChuteFacing(chuteState);
@@ -703,28 +708,28 @@ public class ChuteTileEntity extends SmartTileEntity implements IHaveGoggleInfor
 	public boolean addToGoggleTooltip(List<Component> tooltip, boolean isPlayerSneaking) {
 		boolean downward = getItemMotion() < 0;
 		tooltip.add(componentSpacing.plainCopy()
-			.append(Lang.translateDirect("tooltip.chute.header")));
+				.append(Lang.translateDirect("tooltip.chute.header")));
 		if (pull == 0 && push == 0)
 			tooltip.add(componentSpacing.plainCopy()
-				.append(Lang.translateDirect("tooltip.chute.no_fans_attached"))
-				.withStyle(ChatFormatting.GRAY));
+					.append(Lang.translateDirect("tooltip.chute.no_fans_attached"))
+					.withStyle(ChatFormatting.GRAY));
 		if (pull != 0)
 			tooltip.add(componentSpacing.plainCopy()
-				.append(Lang.translateDirect("tooltip.chute.fans_" + (pull > 0 ? "pull_up" : "push_down"))
-					.withStyle(ChatFormatting.GRAY)));
+					.append(Lang.translateDirect("tooltip.chute.fans_" + (pull > 0 ? "pull_up" : "push_down"))
+							.withStyle(ChatFormatting.GRAY)));
 		if (push != 0)
 			tooltip.add(componentSpacing.plainCopy()
-				.append(Lang.translateDirect("tooltip.chute.fans_" + (push > 0 ? "push_up" : "pull_down"))
-					.withStyle(ChatFormatting.GRAY)));
+					.append(Lang.translateDirect("tooltip.chute.fans_" + (push > 0 ? "push_up" : "pull_down"))
+							.withStyle(ChatFormatting.GRAY)));
 		tooltip.add(componentSpacing.plainCopy()
-			.append("-> ")
-			.append(Lang.translateDirect("tooltip.chute.items_move_" + (downward ? "down" : "up"))
-				.withStyle(ChatFormatting.YELLOW)));
+				.append("-> ")
+				.append(Lang.translateDirect("tooltip.chute.items_move_" + (downward ? "down" : "up"))
+						.withStyle(ChatFormatting.YELLOW)));
 		if (!item.isEmpty()) {
 			tooltip.add(componentSpacing.plainCopy()
-				.append(Lang.translateDirect("tooltip.chute.contains", Components.translatable(item.getDescriptionId())
-					.getString(), item.getCount()))
-				.withStyle(ChatFormatting.GREEN));
+					.append(Lang.translateDirect("tooltip.chute.contains", Components.translatable(item.getDescriptionId())
+							.getString(), item.getCount()))
+					.withStyle(ChatFormatting.GREEN));
 		}
 		return true;
 	}

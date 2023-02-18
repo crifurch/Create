@@ -216,12 +216,18 @@ public class ArmTileEntity extends KineticTileEntity implements ITransformableTE
 		return hasLevel() && state.getOptionalValue(ArmBlock.CEILING)
 			.orElse(false);
 	}
-	
+
 	@Override
 	public void destroy() {
 		super.destroy();
 		if (!heldItem.isEmpty())
 			Block.popResource(level, worldPosition, heldItem);
+	}
+
+	@Override
+	public void clearContent() {
+		super.clearContent();
+		heldItem = ItemStack.EMPTY;
 	}
 
 	@Nullable

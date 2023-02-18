@@ -1,8 +1,5 @@
 package com.simibubi.create.content.contraptions.components.millstone;
 
-import java.util.List;
-import java.util.Optional;
-
 import com.simibubi.create.AllRecipeTypes;
 import com.simibubi.create.content.contraptions.base.KineticTileEntity;
 import com.simibubi.create.foundation.advancement.AllAdvancements;
@@ -34,6 +31,9 @@ import net.minecraftforge.items.ItemStackHandler;
 import net.minecraftforge.items.wrapper.CombinedInvWrapper;
 import net.minecraftforge.items.wrapper.RecipeWrapper;
 
+import java.util.List;
+import java.util.Optional;
+
 public class MillstoneTileEntity extends KineticTileEntity {
 
 	public ItemStackHandler inputInv;
@@ -64,7 +64,7 @@ public class MillstoneTileEntity extends KineticTileEntity {
 		if (getSpeed() == 0)
 			return;
 		if (inputInv.getStackInSlot(0)
-			.isEmpty())
+				.isEmpty())
 			return;
 
 		float pitch = Mth.clamp((Math.abs(getSpeed()) / 256f) + .45f, .85f, 1f);
@@ -79,7 +79,7 @@ public class MillstoneTileEntity extends KineticTileEntity {
 			return;
 		for (int i = 0; i < outputInv.getSlots(); i++)
 			if (outputInv.getStackInSlot(i)
-				.getCount() == outputInv.getSlotLimit(i))
+					.getCount() == outputInv.getSlotLimit(i))
 				return;
 
 		if (timer > 0) {
@@ -95,7 +95,7 @@ public class MillstoneTileEntity extends KineticTileEntity {
 		}
 
 		if (inputInv.getStackInSlot(0)
-			.isEmpty())
+				.isEmpty())
 			return;
 
 		RecipeWrapper inventoryIn = new RecipeWrapper(inputInv);
@@ -121,12 +121,23 @@ public class MillstoneTileEntity extends KineticTileEntity {
 		super.invalidate();
 		capability.invalidate();
 	}
-	
+
 	@Override
 	public void destroy() {
 		super.destroy();
 		ItemHelper.dropContents(level, worldPosition, inputInv);
 		ItemHelper.dropContents(level, worldPosition, outputInv);
+	}
+
+	@Override
+	public void clearContent() {
+		super.clearContent();
+		for (int i = 0; i < inputInv.getSlots(); i++) {
+			inputInv.setStackInSlot(i, ItemStack.EMPTY);
+		}
+		for (int i = 0; i < outputInv.getSlots(); i++) {
+			inputInv.setStackInSlot(i, ItemStack.EMPTY);
+		}
 	}
 
 	private void process() {
@@ -143,9 +154,9 @@ public class MillstoneTileEntity extends KineticTileEntity {
 		stackInSlot.shrink(1);
 		inputInv.setStackInSlot(0, stackInSlot);
 		lastRecipe.rollResults()
-			.forEach(stack -> ItemHandlerHelper.insertItemStacked(outputInv, stack, false));
+				.forEach(stack -> ItemHandlerHelper.insertItemStacked(outputInv, stack, false));
 		award(AllAdvancements.MILLSTONE);
-		
+
 		sendData();
 		setChanged();
 	}
@@ -201,7 +212,7 @@ public class MillstoneTileEntity extends KineticTileEntity {
 		if (lastRecipe != null && lastRecipe.matches(inventoryIn, level))
 			return true;
 		return AllRecipeTypes.MILLING.find(inventoryIn, level)
-			.isPresent();
+				.isPresent();
 	}
 
 	private class MillstoneInventoryHandler extends CombinedInvWrapper {
